@@ -1,77 +1,54 @@
-/**
- * やることリスト
- * title: やることのタイトル
- * isDone: 達成状況　trueになると、チェックが着く
- */
-let tasks = [
-    { title: "お洗濯", isDone: false },
-]
+var BAAS = BAAS || {};
 
-/**
- * [学生1]
- * 引数で与えられるタイトルで「やること」が作成されるように修正してください。
- * 
- * 注) 登録ボタンを押したときに、この関数が呼ばれる処理は既に書かれています。
- * 
- */
-function addTask(title) {
-    const task = { isDone: false }
+BAAS.cocoa = {
+ init:function(){
+  this.setParameters();
+  this.bindEvent();
+ },
 
-    // やることのタイトルを設定(このままだと、すべてのタイトルがHello Worldになってしまう！)
-    task.title = title
+ setParameters:function(){
+  this.$name = $('#jsi-name');
+  this.$textArea = $('#jsi-msg');
+  this.$board = $('#jsi-board');
+  this.$button = $('#jsi-button');
 
-    // 以降は無視して良い
-    tasks.push(task);
-    drawTask(task, tasks.length - 1);
+  //各自登録時に出たコードに書き換え。「chatRoom」は任意でok。複数の部屋を作りたい場合はここを動的にする。
+  this.chatDataStore = new MilkCocoa('各自').dataStore('chatRoom');
+ },
+
+ bindEvent:function(){
+  var self = this;
+  this.$button.on('click',function(){ //トークを送信
+   self.sendMsg();
+  });
+
+  this.chatDataStore.on('push',function(data){ //発言者・トークを監視
+   self.addText(data.value.user);
+   self.addText(data.value.message);
+  });
+ },
+
+ //ユーザー、メッセージ送信
+ sendMsg:function(){
+  if (this.$textArea.val() == ''){ return }
+
+  var self = this;
+  var name = this.$name.val();
+  var text = this.$textArea.val();
+
+  self.chatDataStore.push({user:name, message:text},function(data){
+   self.$textArea.val('');
+  });
+ },
+
+ //受け取り後の処理
+ addText:function(json){
+   var msgDom = $('<li>');
+   msgDom.html(json);
+   this.$board.append(msgDom[0]);
+ }
 }
 
-/**
- * [学生2]
- * 「チェックボックス」をクリックしたときに、
- * 引数で与えられる「やること」の達成状態(isDone)を、
- * 現在の状態と反対になるように更新してください。
- * 
- * 注) クリックしたときに、この関数が呼ばれる処理は既に書かれています。
- * 
- * 例:
- * before   |   after
- * --------------------
- * true     |   false
- * false    |   true
- */
-function onUpdateIsDone(task) {
-    console.log("チェックボックスがクリックされました。", task);
-
-    // 達成状態を更新(このままだと、現在の達成状態で更新されてしまう！)
-    const currentValue = task.isDone;
-    task.isDone = currentValue;
-
-    return task;
-}
-
-/**
- * [学生3]
- * 「タスクのタイトル」をクリックしたときに、
- * 引数で与えられる「やること」の達成状態(isDone)を、
- * 現在の状態と反対になるように更新してください。
- * 
- * 注) クリックしたときに、この関数が呼ばれる処理は既に書かれています。
- * 
- * 例:
- * before   |   after
- * --------------------
- * true     |   false
- * false    |   true
- */
-function onTaskTitleClicked(task) {
-    console.log("タイトルがクリックされました。", task);
-
-    // 達成状態を更新(このままだと、現在の達成状態で更新されてしまう！)
-    const currentValue = task.isDone;
-    if(task.isDone == true)
-        task.isDone = false;
-    else
-        task.isDone = true;
-
-    return task;
-}
+$(function(){
+ BAAS.cocoa.init();
+});
